@@ -1,28 +1,55 @@
-require('dotenv').config()
 
-const express = require('express')
-const app = express()
-const mongoose = require('mongoose')
+const express = require('express');
+const app = express();
+const bcrypt = require('bcrypt');
 
-mongoose.connect(process.env.DATABASE_URL)
+app.use(express.json());
 
-const db = mongoose.connection
+const users = [];
 
-db.on('error', (error) => console.error(error))
-db.once('open', () => console.log('Connected to database'))
+app.get('/users', (req, res) => {
+    res.json(users);
+}); // route
 
-app.use(express.json())
+app.post('/users', async (req, res) => {
+    try {
+        const salt = await bcrypt.genSalt();
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-const subscribersRouter = require('./routes/subscribers')
+        console.log(salt);
+        console.log(hashedPassword);
 
-app.use('/subscribers', subscribersRouter)
+        const user = {
+            name: req.body.name,
+            password: hashedPassword
+        };
 
-// Test route
-app.get('/', (req, res) => {
-    console.log('Request received!')
-    res.send('Server is working!')
+        users.push(user);
+
+        res.status(201).send('User created successfully');
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+app.post('/users/login',async(req,res) => {
+    const user = users.find(user => user.name = req.body.name)
+    if(user == null){
+        return res.status(400).send('Cannot find user')
+    }
+    try{
+        if(await bcrypt.compare(req.body.password,user.password)){
+            res.send('Success')
+        }else{
+            res.send('Not Allowed')
+        }
+
+    }catch{
+        res.status(500).send()
+    }
 })
 
 app.listen(3000, () => {
-    console.log('server started')
-})
+    console.log('Server started on port 3000');
+});
