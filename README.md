@@ -42,3 +42,12 @@ restapi/
 - Express middleware and route handling
 
 
+Day2
+### User Authentication & Password Hashing
+- Learned user registration and login using Node.js and Express.js.
+- Implemented password hashing using bcrypt.
+- Practiced salt generation using `bcrypt.genSalt()`.
+- Used `bcrypt.hash()` and `bcrypt.compare()` for password security and verification.
+- Created GET and POST API routes and tested them using VS Code REST Client.
+
+
