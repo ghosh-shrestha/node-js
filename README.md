@@ -13,23 +13,6 @@ A beginner-friendly REST API built using **Node.js, Express.js, MongoDB and Mong
 - **Mongoose** – MongoDB object modeling
 - **REST Client** – API testing through VS Code
 
-## 📂 Project Structure
-
-```text
-restapi/
-│
-├── models/
-│   └── subscriber.js
-│
-├── routes/
-│   └── subscribers.js
-│
-├── .env
-├── server.js
-├── route.rest
-├── package.json
-└── README.md
-```
 
 ## ⚙️ Features
 
