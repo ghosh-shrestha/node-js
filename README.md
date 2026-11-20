@@ -50,4 +50,14 @@ Day2
 - Used `bcrypt.hash()` and `bcrypt.compare()` for password security and verification.
 - Created GET and POST API routes and tested them using VS Code REST Client.
 
+Day 3 
+User Registration, Login & Logout using Node.js and Express.
+- Created user registration and login pages using EJS.
+- Implemented user registration with password hashing using bcrypt.
+- Integrated Passport.js Local Strategy for authentication.
+- Configured Express Sessions to manage user sessions.
+- Implemented protected routes using authentication middleware.
+- Added logout functionality using method-override.
+
+
 
