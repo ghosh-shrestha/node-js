@@ -1,55 +1,104 @@
 
-const express = require('express');
-const app = express();
-const bcrypt = require('bcrypt');
+if(process.env.NODE_ENV !== 'production'){
+    require('dotenv').config()
+}
 
-app.use(express.json());
+const express = require('express')
+const app = express()
+const passport = require('passport')
+const flash = require('express-flash')
+const session = require('express-session')
+const initializePassport = require('./passport-config')
+const bcrypt = require('bcrypt')
+const methodOverride = require('method-override')
 
-const users = [];
+const users = []
 
-app.get('/users', (req, res) => {
-    res.json(users);
-}); // route
+initializePassport(
+    passport,
+    email => users.find(user => user.email === email),
+    id => users.find(user => user.id === id)
+)
 
-app.post('/users', async (req, res) => {
-    try {
-        const salt = await bcrypt.genSalt();
-        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+app.set('view engine', 'ejs')
+app.use(express.urlencoded({ extended:false }))
 
-        console.log(salt);
-        console.log(hashedPassword);
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false
+}))
 
-        const user = {
-            name: req.body.name,
-            password: hashedPassword
-        };
+app.use(flash())
+app.use(passport.initialize())
+app.use(passport.session())
+app.use(methodOverride('_method'))
 
-        users.push(user);
 
-        res.status(201).send('User created successfully');
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-app.post('/users/login',async(req,res) => {
-    const user = users.find(user => user.name = req.body.name)
-    if(user == null){
-        return res.status(400).send('Cannot find user')
-    }
-    try{
-        if(await bcrypt.compare(req.body.password,user.password)){
-            res.send('Success')
-        }else{
-            res.send('Not Allowed')
-        }
-
-    }catch{
-        res.status(500).send()
-    }
+app.get('/',checkAuthenticated, (req, res) => {
+    res.render('index.ejs',{name:req.user.name})
 })
 
+app.get('/login',(req,res)=>{
+    res.render('login.ejs', { messages: { error: req.flash('error') } })
+})
+
+app.post('/login',checkNotAuthenticated,passport.authenticate('local', {
+    successRedirect:'/',
+    failureRedirect:'/login',
+    failureFlash: true
+}))
+
+app.get('/register',checkNotAuthenticated,(req,res)=>{
+    res.render('register.ejs')
+})
+
+app.post('/register',checkNotAuthenticated,async(req,res)=>{
+    try{
+        const hashedPassword = await bcrypt.hash(req.body.password,10)
+
+        users.push({
+            id:Date.now().toString(),
+            name:req.body.name,
+            email:req.body.email,
+            password: hashedPassword
+        })
+
+        console.log(users)
+        res.redirect('/login')
+
+    }catch(error){
+        console.log(error)
+        res.redirect('/register')
+    }
+
+})
+
+app.delete('/logout',(req,res)=>{
+    req.logout((error) => {
+        if(error){
+            return next(error)
+        }
+        res.redirect('/login')
+    })
+})
+
+function checkAuthenticated(req,res,next){
+    if(req.isAuthenticated()){
+        return next()
+    }
+    res.redirect('/login')
+}
+
+function checkNotAuthenticated(req,res,next){
+    if(req.isAuthenticated()){
+        return res.redirect('/')
+    }
+    next()
+}
+
 app.listen(3000, () => {
-    console.log('Server started on port 3000');
-});
+    console.log('Server running on port 3000')
+})
+
+
